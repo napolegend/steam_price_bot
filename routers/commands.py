@@ -26,45 +26,59 @@ async def start_command(message: Message):
 
 @router.message(Command("help"))
 async def help_command(message: Message):
-    base_commands = [
-        BotCommand(command='start', description='запустить бота'),
-        BotCommand(command='help', description='запустить меню помощи'),
-        BotCommand(command='subscribe', description='подписаться на оповещение'),
-        BotCommand(command='unsubscribe', description='отписаться от оповещения'),
-        BotCommand(command='list', description='посмотреть свои заявки'),
-        BotCommand(command='edit', description='изменить цену оповещения'),]
-
-    base_message = ("🔎 Список команд бота: \n"
-                    "/start - запустить бота \n"
-                    "/help - отобразить это меню \n"
-                    "/subscribe - подписаться на оповещение при снижении цены\n"
-                    "/unsubscribe - отписаться от уведомления \n"
-                    "/list - посмотреть свои заявки\n"
-                    "/edit - изменить цену \n\n"
-                    "ℹ️ Как использовать бота:\n\n"
-                    "1. Найти ID игры в Steam (в URL страницы игры)\n"
-                    "   Пример: https://store.steampowered.com/app/730/CounterStrike_2/\n"
-                    "   ID игры: 730\n\n"
-                    "2. Добавить отслеживание: /subscribe\n"
-                    "3. Указать ID игры и желаемую цену\n\n"
-                    "📣 Бот будет уведомлять вас, когда цена опустится ниже указанной!")
-
     if message.from_user.id in ADMINS:
-        admin_commands = base_commands + [
-            BotCommand(command='ban', description='забанить пользователя по тг id'),
-            BotCommand(command='unban', description='разбанить пользователя по тг id'),
-            BotCommand(command='stats', description='посмотреть статистику бота'),]
-
-        admin_message = (base_message + "\n\n❓ Возможности для админа:\n"
-                        "/stats - посмотреть статистику по введенным командам\n"
-                        "/ban - забанить пользователя\n"
-                        "/unban - разбанить пользователя")
-
-        await message.answer(admin_message)
-        await bot.set_my_commands(admin_commands, BotCommandScopeDefault(chat_id=message.from_user.id))
+        cmd_menu = [BotCommand(command='start', description='запустить бота'),
+                    BotCommand(command='help', description='запустить меню помощи'),
+                    BotCommand(command='subscribe', description='подписаться на оповещение'),
+                    BotCommand(command='unsubscribe', description='отписаться от оповещения'),
+                    BotCommand(command='list', description='посмотреть свои заявки'),
+                    BotCommand(command='edit', description='изменить цену оповещения'),
+                    BotCommand(command='ban', description='забанить пользователя по тг id'),
+                    BotCommand(command='unban', description='разбанить пользователя по тг id'),
+                    BotCommand(command='stats', description='посмотреть статистику бота'), ]
+        await message.answer("🔎 Список общих команд бота: \n"
+                             "/start - запустить бота \n"
+                             "/help - отобразить это меню \n"
+                             "/subscribe подписаться на оповещение при снижении цены на игру / DLC с определенным id до уровня price в рублях \n"
+                             "/unsubscribe - отписаться от уведомления \n"
+                             "/list - посмотреть свои заявки\n"
+                             "/edit - изменить цену \n\n"
+                             "ℹ️ Как использовать бота:\n\n"
+                             "1. Найти ID игры в Steam (в URL страницы игры)\n"
+                             "   Пример: https://store.steampowered.com/app/730/CounterStrike_2/\n"
+                             "   ID игры: 730\n\n"
+                             "2. Добавить отслеживание: /subscribe\n"
+                             "3. Указать ID игры и желаемую цену\n\n"
+                             "📣 Бот будет уведомлять вас, когда цена опустится ниже указанной!\n\n"
+                             "❓ Возможности для админа:\n"
+                             "/stats - посмотреть статистику по введенным командам\n"
+                             "/ban - забанить пользователя\n"
+                             "/unban - разбанить пользователя"
+                             )
+        await bot.set_my_commands(cmd_menu, BotCommandScopeDefault())
     else:
-        await message.answer(base_message)
-        await bot.set_my_commands(base_commands, BotCommandScopeDefault(chat_id=message.from_user.id))
+        await message.answer("🔎 Список команд бота: \n"
+                             "/start - запустить бота \n"
+                             "/help - отобразить это меню \n"
+                             "/subscribe подписаться на оповещение при снижении цены на игру / DLC с определенным id до уровня price в рублях \n"
+                             "/unsubscribe - отписаться от уведомления \n"
+                             "/list - посмотреть свои заявки\n"
+                             "/edit - изменить цену \n\n"
+                             "ℹ️ Как использовать бота:\n\n"
+                             "1. Найти ID игры в Steam (в URL страницы игры)\n"
+                             "   Пример: https://store.steampowered.com/app/730/CounterStrike_2/\n"
+                             "   ID игры: 730\n\n"
+                             "2. Добавить отслеживание: /subscribe\n"
+                             "3. Указать ID игры и желаемую цену\n\n"
+                             "📣 Бот будет уведомлять вас, когда цена опустится ниже указанной!"
+                             )
+        cmd_menu = [BotCommand(command='start', description='запустить бота'),
+                    BotCommand(command='help', description='запустить меню помощи'),
+                    BotCommand(command='subscribe', description='подписаться на оповещение'),
+                    BotCommand(command='unsubscribe', description='отписаться от оповещения'),
+                    BotCommand(command='list', description='посмотреть свои заявки'),
+                    BotCommand(command='edit', description='изменить цену оповещения'), ]
+        await bot.set_my_commands(cmd_menu, BotCommandScopeDefault())
 
     logging.info(f"User {message.from_user.id} called /help")
 
