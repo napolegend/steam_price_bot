@@ -1,37 +1,70 @@
-from aiogram import Router
-from aiogram.types import Message
+import os
+from aiogram import Router, Bot
+from aiogram.types import Message, BotCommand, BotCommandScopeDefault
 from aiogram.filters import Command
 from services.database import add_user, DB_PATH, get_all_command_stats, is_admin, ADMINS
 import logging
 import sqlite3
 
+bot = Bot(os.getenv("TOKEN"))
 router = Router()
+
 @router.message(Command("start"))
 async def start_command(message: Message):
     add_user(message.from_user.id)
-    await message.answer("Привет! Я бот для отслеживания цен на игры и DLC в steam\n"
-                         "/help - подробнее про команды\n"
-                         "Алё алё игры да да деньги")
+
+    if message.from_user.id not in ADMINS:
+        await message.answer("😇 Привет! Я бот для отслеживания цен на игры и DLC в steam\n"
+                             "/help - подробнее про команды\n"
+                             "Алё алё игры да да деньги 💰")
+    else:
+        await message.answer("😇 Привет! Я бот для отслеживания цен на игры и DLC в steam\n"
+                             "/help - подробнее про команды\n"
+                             "ЗДЕСЬ У ТЕБЯ ЕСТЬ ВЛАСТЬ ГОРДИСЬ ЭТИМ!!! 🤟")
 
     logging.info(f"User {message.from_user.id} called /start")
 
 @router.message(Command("help"))
 async def help_command(message: Message):
-    await message.answer("Список команд бота: \n"
-                         "/start - запустить бота \n"
-                         "/help - отобразить это меню \n"
-                         "/subscribe подписаться на оповещение при снижении цены на игру / DLC с определенным id до уровня price в рублях \n"
-                         "/unsubscribe - отписаться от уведомления \n"
-                         "/list - посмотреть свои заявки\n"
-                         "/edit - изменить цену \n\n"
-                         "ℹ️ Как использовать бота:\n\n"
-                         "1. Найти ID игры в Steam (в URL страницы игры)\n"
-                         "   Пример: https://store.steampowered.com/app/730/CounterStrike_2/\n"
-                         "   ID игры: 730\n\n"
-                         "2. Добавить отслеживание: /subscribe\n"
-                         "3. Указать ID игры и желаемую цену\n\n"
-                         "📣 Бот будет уведомлять вас, когда цена опустится ниже указанной!"
-                         )
+    base_commands = [
+        BotCommand(command='start', description='запустить бота'),
+        BotCommand(command='help', description='запустить меню помощи'),
+        BotCommand(command='subscribe', description='подписаться на оповещение'),
+        BotCommand(command='unsubscribe', description='отписаться от оповещения'),
+        BotCommand(command='list', description='посмотреть свои заявки'),
+        BotCommand(command='edit', description='изменить цену оповещения'),]
+
+    base_message = ("🔎 Список команд бота: \n"
+                    "/start - запустить бота \n"
+                    "/help - отобразить это меню \n"
+                    "/subscribe - подписаться на оповещение при снижении цены\n"
+                    "/unsubscribe - отписаться от уведомления \n"
+                    "/list - посмотреть свои заявки\n"
+                    "/edit - изменить цену \n\n"
+                    "ℹ️ Как использовать бота:\n\n"
+                    "1. Найти ID игры в Steam (в URL страницы игры)\n"
+                    "   Пример: https://store.steampowered.com/app/730/CounterStrike_2/\n"
+                    "   ID игры: 730\n\n"
+                    "2. Добавить отслеживание: /subscribe\n"
+                    "3. Указать ID игры и желаемую цену\n\n"
+                    "📣 Бот будет уведомлять вас, когда цена опустится ниже указанной!")
+
+    if message.from_user.id in ADMINS:
+        admin_commands = base_commands + [
+            BotCommand(command='ban', description='забанить пользователя по тг id'),
+            BotCommand(command='unban', description='разбанить пользователя по тг id'),
+            BotCommand(command='stats', description='посмотреть статистику бота'),]
+
+        admin_message = (base_message + "\n\n❓ Возможности для админа:\n"
+                        "/stats - посмотреть статистику по введенным командам\n"
+                        "/ban - забанить пользователя\n"
+                        "/unban - разбанить пользователя")
+
+        await message.answer(admin_message)
+        await bot.set_my_commands(admin_commands, BotCommandScopeDefault(chat_id=message.from_user.id))
+    else:
+        await message.answer(base_message)
+        await bot.set_my_commands(base_commands, BotCommandScopeDefault(chat_id=message.from_user.id))
 
     logging.info(f"User {message.from_user.id} called /help")
 
@@ -40,7 +73,7 @@ async def stats_command(message: Message):
     user_id = message.from_user.id
 
     if not is_admin(user_id):
-        await message.answer("У вас нет прав для использования этой команды.")
+        await message.answer("❌ У вас нет прав для использования этой команды.")
         return
 
     conn = sqlite3.connect(DB_PATH)
@@ -59,6 +92,8 @@ async def stats_command(message: Message):
         reply.append(f"{cmd} — {count}")
 
     await message.answer("\n".join(reply))
+
+    logging.info(f"User {message.from_user.id} called /stats")
 
 @router.message(Command("ban"))
 async def ban_command(message: Message):
@@ -91,15 +126,17 @@ async def ban_command(message: Message):
 
     await message.answer(f"✅ Пользователь с ID {target_user_id} забанен.")
 
+    logging.info(f"User {message.from_user.id} called /ban")
+
 @router.message(Command("unban"))
 async def unban_user(message: Message):
     if message.from_user.id not in ADMINS:
-        await message.answer("У вас нет прав для этой команды.")
+        await message.answer("❌ У вас нет прав для этой команды.")
         return
 
     parts = message.text.split()
     if len(parts) != 2 or not parts[1].isdigit():
-        await message.answer("Использование: /unban <user_id>")
+        await message.answer("❌ Используйте: /unban <user_id>")
         return
 
     user_id = int(parts[1])
@@ -110,5 +147,7 @@ async def unban_user(message: Message):
     conn.commit()
     conn.close()
 
-    await message.answer(f"Пользователь {user_id} разбанен.")
+    await message.answer(f"✅ Пользователь с ID {user_id} разбанен.")
+
+    logging.info(f"User {message.from_user.id} called /unban")
 

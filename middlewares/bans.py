@@ -14,7 +14,6 @@ BAD_WORDS = ["шлюха", "идиот", "блядь", "сука", "хуесос
              "уебок", "пидор", "пидорас", "конченный", "придурок", "пошел нахуй",
              "аутист", "уебище", "сын помойной бляди", "блядина", "скотина"] # Потом пополним
 
-
 class BanMiddleware(BaseMiddleware):
     async def __call__(
         self,
@@ -31,7 +30,7 @@ class BanMiddleware(BaseMiddleware):
         result = c.fetchone()
 
         if result and result[0] == 1:
-            await event.answer("Вы заблокированы за нарушение правил womp-womp")
+            await event.answer("😱 Вы были забанены по причине оскорбления администрации womp-womp")
             conn.close()
             return
 
@@ -40,12 +39,11 @@ class BanMiddleware(BaseMiddleware):
             if user_id not in ADMINS:
                 c.execute("UPDATE users SET is_banned = 1 WHERE id = ?", (user_id,))
                 conn.commit()
-                await event.answer("Вы были забанены за нарушение правил womp-womp")
+                await event.answer("😱 Вы были забанены по причине оскорбления администрации womp-womp")
                 conn.close()
                 return
             else:
-                await event.answer("Окак...")
+                await event.answer("👀 Окак...")
         conn.close()
 
         return await handler(event, data)
-

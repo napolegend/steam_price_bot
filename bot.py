@@ -56,8 +56,6 @@ async def check_prices(bot: Bot):
                 current_price = game_info["price"]
                 add_price(game_id, current_price)
 
-
-
                 # Если цена опустилась ниже порога и изменилась
                 # P.S. увеличение на 15% обусловлено "жадностью" и последующим сожалением некоторых пользователей :)
                 if current_price <= 1.15 * threshold:
@@ -77,12 +75,11 @@ async def check_prices(bot: Bot):
 
         await asyncio.sleep(360)
 
-
 async def main():
     bot = Bot(os.getenv("TOKEN"))
     dp = Dispatcher(storage=MemoryStorage())
 
-    # Подключение мидлтварей
+    # Подключение мидлварей
     dp.message.middleware(BanMiddleware())
     dp.message.middleware(CommandStatsMiddleware())
 
@@ -91,18 +88,10 @@ async def main():
     dp.include_router(tracking.router)
     dp.include_router(ban_catch.router)
 
-    cmd_menu = [BotCommand(command='start', description='запустить бота'),
-                    BotCommand(command='help', description='запустить меню помощи'),
-                    BotCommand(command='subscribe', description='подписаться на оповещение'),
-                    BotCommand(command='unsubscribe', description='отписаться от оповещения'),
-                    BotCommand(command='list', description='посмотреть свои заявки'),
-                    BotCommand(command='edit', description='изменить цену оповещения'),]
-    await bot.set_my_commands(cmd_menu, BotCommandScopeDefault())
     print("Bot is running...")
     print(ADMINS)
     asyncio.create_task(check_prices(bot))
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     logging.info("Starting bot...")

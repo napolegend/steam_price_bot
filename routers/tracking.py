@@ -13,7 +13,7 @@ router = Router()
 
 @router.message(Command("subscribe"))
 async def start_add_tracking(message: types.Message, state: FSMContext):
-    await message.answer("Введите ID игры в Steam:")
+    await message.answer("🔎 Введите ID игры в Steam:")
     await state.set_state(AddTracking.game_id)
 
 
@@ -57,7 +57,7 @@ async def process_game_id(message: types.Message, state: FSMContext):
     await message.answer(
         f"🎮 Игра: {game_info['name']}\n"
         f"💰 Текущая цена: {game_info['price']} руб.\n\n"
-        "Введите пороговую цену (в рублях):"
+        "🔎 Введите пороговую цену (в рублях):"
     )
     await state.set_state(AddTracking.threshold)
 
@@ -118,7 +118,7 @@ async def delete_tracking_start(message: types.Message):
         return
 
     await message.answer(
-        "Выберите отслеживание для удаления:",
+        "🔎 Выберите отслеживание для удаления:",
         reply_markup=keyboard
     )
 
@@ -157,7 +157,7 @@ async def edit_tracking_start(message: types.Message):
         return
 
     await message.answer(
-        "Выберите отслеживание для изменения пороговой цены:",
+        "🔎 Выберите отслеживание для изменения пороговой цены:",
         reply_markup=keyboard
     )
 
@@ -176,7 +176,7 @@ async def start_edit_tracking(callback: types.CallbackQuery, state: FSMContext):
     # Убираем клавиатуру
     await callback.message.edit_reply_markup(reply_markup=None)
 
-    await callback.message.answer("Введите новую пороговую цену (в рублях):")
+    await callback.message.answer("🔎 Введите новую пороговую цену (в рублях):")
     await callback.answer()
 
 
