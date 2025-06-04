@@ -111,7 +111,7 @@ async def list_trackings(message: types.Message):
 @router.message(Command("unsubscribe"))
 async def delete_tracking_start(message: types.Message):
     user_id = add_user(message.from_user.id)
-    keyboard = create_tracking_keyboard(user_id)
+    keyboard = create_tracking_keyboard(user_id, action="delete")
 
     if not keyboard:
         await message.answer("📭 У вас нет активных отслеживаний")

@@ -8,11 +8,12 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from routers import commands, tracking
+from routers import commands, tracking, ban_catch
 from services.database import get_trackings, add_price, delete_tracking_by_id, ADMINS
 from services.steam import get_game_info
 
 from middlewares.stats import CommandStatsMiddleware
+from middlewares.bans import BanMiddleware
 
 load_dotenv()
 # 1) Конфигурируем корневой логгер
@@ -81,10 +82,14 @@ async def main():
     bot = Bot(os.getenv("TOKEN"))
     dp = Dispatcher(storage=MemoryStorage())
 
+    # Подключение мидлтварей
+    dp.message.middleware(BanMiddleware())
+    dp.message.middleware(CommandStatsMiddleware())
+
     # Регистрация роутеров
     dp.include_router(commands.router)
     dp.include_router(tracking.router)
-    dp.message.middleware(CommandStatsMiddleware())
+    dp.include_router(ban_catch.router)
 
     cmd_menu = [BotCommand(command='start', description='запустить бота'),
                     BotCommand(command='help', description='запустить меню помощи'),
