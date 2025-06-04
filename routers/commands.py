@@ -1,8 +1,9 @@
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
-from services.database import add_user
+from services.database import add_user, DB_PATH, get_all_command_stats, is_admin
 import logging
+import sqlite3
 
 router = Router()
 @router.message(Command("start"))
@@ -33,3 +34,29 @@ async def help_command(message: Message):
                          )
 
     logging.info(f"User {message.from_user.id} called /help")
+
+@router.message(Command("stats"))
+async def stats_command(message: Message):
+    user_id = message.from_user.id
+
+    if not is_admin(user_id):
+        await message.answer("У вас нет прав для использования этой команды.")
+        return
+
+    # Если пользователь админ — получаем статистику
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+    conn.close()
+
+    stats = get_all_command_stats()
+    if not stats:
+        await message.answer("📊 Статистика пока пуста.")
+        return
+
+    reply = ["📊 Статистика по командам:"]
+    for cmd, count in stats:
+        reply.append(f"{cmd} — {count}")
+
+    await message.answer("\n".join(reply))

@@ -8,10 +8,11 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.fsm.storage.memory import MemoryStorage
 
-
 from routers import commands, tracking
-from services.database import get_trackings, add_price, delete_tracking_by_id
+from services.database import get_trackings, add_price, delete_tracking_by_id, ADMINS
 from services.steam import get_game_info
+
+from middlewares.stats import CommandStatsMiddleware
 
 load_dotenv()
 # 1) Конфигурируем корневой логгер
@@ -83,6 +84,7 @@ async def main():
     # Регистрация роутеров
     dp.include_router(commands.router)
     dp.include_router(tracking.router)
+    dp.message.middleware(CommandStatsMiddleware())
 
     cmd_menu = [BotCommand(command='start', description='запустить бота'),
                     BotCommand(command='help', description='запустить меню помощи'),
@@ -92,6 +94,7 @@ async def main():
                     BotCommand(command='edit', description='изменить цену оповещения'),]
     await bot.set_my_commands(cmd_menu, BotCommandScopeDefault())
     print("Bot is running...")
+    print(ADMINS)
     asyncio.create_task(check_prices(bot))
     await dp.start_polling(bot)
 
